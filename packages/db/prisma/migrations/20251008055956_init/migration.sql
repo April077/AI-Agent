@@ -10,6 +10,21 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
+CREATE TABLE "Task" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "emailId" TEXT NOT NULL,
+    "subject" TEXT NOT NULL,
+    "summary" TEXT NOT NULL,
+    "priority" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "dueDate" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Account" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -23,6 +38,7 @@ CREATE TABLE "Account" (
     "scope" TEXT,
     "id_token" TEXT,
     "session_state" TEXT,
+    "refresh_token_expires_in" INTEGER,
 
     CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
 );
@@ -46,6 +62,9 @@ CREATE TABLE "VerificationToken" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Task_emailId_key" ON "Task"("emailId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");

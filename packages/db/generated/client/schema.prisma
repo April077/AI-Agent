@@ -18,6 +18,18 @@ model User {
   sessions      Session[]
 }
 
+model Task {
+  id        String    @id @default(cuid())
+  userId    String
+  emailId   String    @unique // <-- This ensures no duplicates
+  subject   String
+  summary   String
+  priority  String
+  action    String
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+}
+
 model Account {
   id                       String  @id @default(cuid())
   userId                   String

@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   await fetch("http://localhost:4000/test-gmail", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: session.user.refreshToken }),
+    body: JSON.stringify({ refreshToken: session.user.refreshToken , userId: session.user.id }),
   });
 
   

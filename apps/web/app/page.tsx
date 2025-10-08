@@ -4,6 +4,7 @@ import SignInButton from "./components/SignInButton";
 
 export default async function LandingPage() {
   const session = await getServerSession(authOptions);
+  console.log("Session on landing page:", session);
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
