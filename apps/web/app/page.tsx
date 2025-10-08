@@ -1,102 +1,86 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../lib/auth";
+import SignInButton from "./components/SignInButton";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+export default async function LandingPage() {
+  const session = await getServerSession(authOptions);
 
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+    <main className="flex flex-col min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-32 px-6 text-center relative overflow-hidden flex flex-col items-center">
+        <div className="max-w-4xl mx-auto z-10 relative flex flex-col items-center">
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+            Your AI Agent for{" "}
+            <span className="text-yellow-300">Email, Tasks & Automation</span>
+          </h1>
+          <p className="text-lg md:text-xl mb-8 text-center">
+            Summarize emails, schedule meetings, automate workflows, and connect
+            your apps — all in one intelligent assistant.
+          </p>
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+          {/* ✅ Show Sign Out if logged in, else Sign In */}
+          {session ? (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-lg">Signed in as {session.user?.email}</p>
+              <SignInButton signedIn={true} />
+            </div>
+          ) : (
+            <div className="flex justify-center w-full">
+              <SignInButton signedIn={false} />
+            </div>
+          )}
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
+
+        {/* Decorative floating shapes */}
+        <div className="absolute top-0 left-0 w-72 h-72 bg-yellow-300 opacity-20 rounded-full -translate-x-32 -translate-y-32"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-10 rounded-full translate-x-32 translate-y-32"></div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 px-6 bg-white text-gray-800">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12 text-center">
+          <div className="p-6 shadow-lg rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+            <h2 className="text-2xl font-semibold mb-4">Email Summarizer</h2>
+            <p>
+              Quickly understand your inbox with AI-powered email summaries,
+              saving hours of reading time.
+            </p>
+          </div>
+          <div className="p-6 shadow-lg rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+            <h2 className="text-2xl font-semibold mb-4">Task Scheduler</h2>
+            <p>
+              Automatically schedule meetings and tasks from emails or messages,
+              synced across your calendar.
+            </p>
+          </div>
+          <div className="p-6 shadow-lg rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-transform duration-300">
+            <h2 className="text-2xl font-semibold mb-4">App Integrations</h2>
+            <p>
+              Connect your favorite apps like Slack, Notion, or Google Workspace
+              and automate your workflow seamlessly.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      {!session && (
+        <section className="py-20 px-6 bg-gray-800 text-center flex flex-col items-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Ready to boost your productivity with AI?
+          </h2>
+          <p className="text-lg mb-8">
+            Sign in with Google and let your intelligent assistant handle the rest.
+          </p>
+          <SignInButton signedIn={false} />
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="py-6 text-center text-gray-400 text-sm">
+        &copy; {new Date().getFullYear()} YourAIApp. All rights reserved.
       </footer>
-    </div>
+    </main>
   );
 }
