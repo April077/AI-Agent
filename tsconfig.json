@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@repo/db": ["packages/db"],
+      "@repo/db": ["packages/db/*"],  
       "@repo/ui/*": ["packages/ui/*"],
       "@repo/utils/*": ["packages/utils/*"]
     }
