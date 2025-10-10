@@ -18,10 +18,6 @@ interface EmailResponse {
 export async function summarizeEmail(message: Message): Promise<EmailResponse> {
   const { subject, from, snippet } = message;
 
-  console.log("🤖 Starting AI summarization for:", subject.substring(0, 50));
-  console.log("   Using Groq API");
-  console.log("   Token present:", process.env.GROQ_API_KEY ? "✅ Yes" : "❌ No");
-
   const prompt = `Analyze this email and respond with ONLY a valid JSON object (no markdown, no other text):
 
 Email Subject: ${subject}
@@ -37,12 +33,10 @@ Return JSON with these exact keys:
 }`;
 
   try {
-    console.log("   📤 Sending request to Groq...");
-    
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
-        model: "llama-3.1-8b-instant", // Fast and free
+        model: "llama-3.1-8b-instant",
         messages: [
           {
             role: "system",
@@ -65,30 +59,20 @@ Return JSON with these exact keys:
       }
     );
 
-    console.log("   ✅ Received response from Groq");
-    
     const content = response.data.choices[0].message.content;
-    console.log("   📝 Raw content:", content.substring(0, 150));
-
-    // Clean and parse JSON
-    let cleanContent = content.trim();
+    let cleanContent = content.trim()
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "");
     
-    // Remove markdown code blocks if present
-    cleanContent = cleanContent.replace(/```json\n?/g, "").replace(/```\n?/g, "");
-    
-    // Extract JSON object if it's embedded in text
     const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       cleanContent = jsonMatch[0];
     }
 
     const parsedData = JSON.parse(cleanContent);
-    console.log("   ✅ Successfully parsed JSON");
-    console.log("      Priority:", parsedData.priority);
-    console.log("      Has action:", parsedData.action ? "Yes" : "No");
 
     return {
-      subject: subject,
+      subject,
       summary: parsedData.summary || snippet.substring(0, 200),
       priority: parsedData.priority || "medium",
       action: parsedData.action || null,
@@ -96,20 +80,12 @@ Return JSON with these exact keys:
     };
 
   } catch (error: any) {
-    console.error("   ❌ Error calling Groq API:");
-    console.error("      Error Message:", error.message);
+    console.error("AI summarization failed, using fallback:", error.message);
     
-    if (error.response) {
-      console.error("      Status:", error.response?.status);
-      console.error("      Response:", JSON.stringify(error.response?.data, null, 2));
-    }
-
-    // Fallback to simple parsing
-    console.log("   🔄 Using fallback simple parsing");
     const fallback = simpleParseEmail(snippet, subject);
     
     return {
-      subject: subject,
+      subject,
       summary: fallback.summary || snippet.substring(0, 200),
       priority: fallback.priority || "medium",
       action: fallback.action || null,
@@ -118,7 +94,6 @@ Return JSON with these exact keys:
   }
 }
 
-// Simple rule-based parsing as fallback
 function simpleParseEmail(snippet: string, subject: string): Partial<EmailResponse> {
   return {
     summary: snippet.substring(0, 200) + (snippet.length > 200 ? "..." : ""),
@@ -128,7 +103,6 @@ function simpleParseEmail(snippet: string, subject: string): Partial<EmailRespon
   };
 }
 
-// Determine priority based on keywords
 function determinePriority(subject: string, snippet: string): "high" | "medium" | "low" {
   const text = (subject + " " + snippet).toLowerCase();
   
@@ -150,7 +124,6 @@ function determinePriority(subject: string, snippet: string): "high" | "medium" 
   return "medium";
 }
 
-// Extract action items
 function extractAction(text: string): string | null {
   const actionKeywords = [
     "please", "action required", "respond", "reply", "confirm", 
@@ -172,7 +145,6 @@ function extractAction(text: string): string | null {
   return null;
 }
 
-// Extract dates
 function extractDate(text: string): string | null {
   const datePatterns = [
     /\d{1,2}(?:st|nd|rd|th)?\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)[,\s]+\d{4}/i,

@@ -1,52 +1,65 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth";
 import { redirect } from "next/navigation";
-import { Sidebar } from "../components/SideBar";
-import { Header } from "../components/Header";
-import { DashboardCard } from "../components/DashboardCard";
+import { Header } from "../../components/Header";
+import { AISummary } from "../../components/AiSummary";
+import { StatsGrid } from "../../components/StatsGrid";
+
+
+interface Task {
+  id: string;
+  subject: string;
+  summary: string | null;
+  priority: string | null;
+  action: string | null;
+  dueDate: string | null;
+  createdAt: string;
+}
+
+interface TaskStats {
+  total: number;
+  high: number;
+  medium: number;
+  low: number;
+  withActions: number;
+  withDueDates: number;
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  console.log("Session:", session);
 
   if (!session) {
-    redirect("/"); // user not logged in
+    redirect("/");
   }
 
-  // safe to fetch now
+  // Sync emails in background
   await fetch("http://localhost:4000/test-gmail", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: session.user.refreshToken , userId: session.user.id }),
+    body: JSON.stringify({
+      refreshToken: session.user.refreshToken,
+      userId: session.user.id,
+    }),
   });
 
-  
+  const tasksResponse = await fetch(
+    `http://localhost:4000/tasks/${session.user.id}`,
+    { cache: "no-store" }
+  );
+  const { tasks, stats }: { tasks: Task[]; stats: TaskStats } =
+    await tasksResponse.json();
+
   const user = session.user;
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header user={user} />
-        <main className="p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <DashboardCard title="AI Summary">
-            <p>Good evening, {user.name} 👋 Here’s what I found today:</p>
-            <ul className="text-sm text-gray-600 mt-2">
-              <li>• 5 new emails summarized</li>
-              <li>• 2 meetings scheduled for tomorrow</li>
-              <li>• 3 tasks pending</li>
-            </ul>
-          </DashboardCard>
+    <main className="p-6">
+      <Header user={user} />
+      
+      {user.name && (
+        <AISummary user={{ name: user.name }} stats={stats} tasks={tasks} />
+      )}
 
-          <DashboardCard title="Recent Emails">
-            <p>No new emails yet.</p>
-          </DashboardCard>
-
-          <DashboardCard title="To-Do List">
-            <p>AI-generated tasks will appear here.</p>
-          </DashboardCard>
-        </main>
-      </div>
-    </div>
+      <StatsGrid stats={stats} tasks={tasks} />
+    </main>
   );
 }

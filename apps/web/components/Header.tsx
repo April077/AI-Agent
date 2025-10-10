@@ -26,7 +26,7 @@ export function Header({ user }: { user: User }) {
   }, []);
 
   return (
-    <header className="flex items-center text-white bg-zinc-900 justify-between p-4 border-b  backdrop-blur">
+    <header className="flex items-center text-white bg-zinc-900 justify-between p-4   backdrop-blur">
       {/* Search Input */}
       <div className="flex items-center gap-3">
         <Search size={20} />
