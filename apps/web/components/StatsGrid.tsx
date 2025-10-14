@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-interface Task {
+interface Email {
   id: string;
   priority: string | null;
   action: string | null;
@@ -19,11 +19,11 @@ interface TaskStats {
 
 interface StatsGridProps {
   stats: TaskStats;
-  tasks: Task[];
+  emails: Email[];
 }
 
-export function StatsGrid({ stats, tasks }: StatsGridProps) {
-  const upcomingDeadlines = tasks.filter((t) => t.dueDate).length;
+export function StatsGrid({ stats, emails }: StatsGridProps) {
+  const upcomingDeadlines = emails.filter((t) => t.dueDate).length;
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-6">

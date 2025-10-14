@@ -16,18 +16,29 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  emails        Email[]
+
+  @@index([email]) // Fast login/lookup queries
 }
 
-model Task {
+model Email {
   id        String    @id @default(cuid())
   userId    String
-  emailId   String    @unique // <-- This ensures no duplicates
+  emailId   String    @unique // Ensures no duplicates from Gmail API
   subject   String
   summary   String
-  priority  String
+  priority  String // "high" | "medium" | "low"
   action    String
   dueDate   DateTime?
   createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Strategic indexes for common queries
+  @@index([userId, priority, createdAt]) // Main inbox: filter by priority + sort by date
+  @@index([userId, createdAt]) // Chronological view
+  @@index([userId, dueDate]) // Upcoming deadlines
+  @@index([priority, dueDate]) // High priority items with deadlines
 }
 
 model Account {
@@ -43,10 +54,12 @@ model Account {
   scope                    String?
   id_token                 String?
   session_state            String?
-  refresh_token_expires_in Int? // add this line
-  user                     User    @relation(fields: [userId], references: [id])
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId]) // Fast user account lookups
 }
 
 model Session {
@@ -55,7 +68,10 @@ model Session {
   userId       String
   expires      DateTime
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId]) // Fast user session lookups
+  @@index([sessionToken]) // Fast session validation
 }
 
 model VerificationToken {
@@ -64,4 +80,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@index([token]) // Fast token verification
+  @@index([expires]) // Cleanup expired tokens efficiently
 }

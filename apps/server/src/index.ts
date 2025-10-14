@@ -1,3 +1,6 @@
+// ============================================
+// FILE 1: server.ts (or index.ts)
+// ============================================
 import express from "express";
 import { google } from "googleapis";
 import dotenv from "dotenv";
@@ -19,33 +22,85 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
 });
 
-app.get("/tasks/:userId", async (req, res) => {
+app.get("/emails/:userId", async (req, res) => {
   const { userId } = req.params;
+  const { priority } = req.query;
 
   try {
-    const tasks = await prisma.task.findMany({
-      where: { userId },
+    const whereClause: any = { userId };
+    
+    if (priority && ['high', 'medium', 'low'].includes(priority as string)) {
+      whereClause.priority = priority;
+    }
+
+    const emails = await prisma.email.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       take: 50
     });
 
     const stats = {
-      total: tasks.length,
-      high: tasks.filter(t => t.priority === 'high').length,
-      medium: tasks.filter(t => t.priority === 'medium').length,
-      low: tasks.filter(t => t.priority === 'low').length,
-      withActions: tasks.filter(t => t.action).length,
-      withDueDates: tasks.filter(t => t.dueDate).length,
+      total: emails.length,
+      high: emails.filter(e => e.priority === 'high').length,
+      medium: emails.filter(e => e.priority === 'medium').length,
+      low: emails.filter(e => e.priority === 'low').length,
+      withActions: emails.filter(e => e.action).length,
+      withDueDates: emails.filter(e => e.dueDate).length,
     };
 
-    return res.json({ tasks, stats });
+    return res.json({ emails, stats });
   } catch (err: any) {
-    console.error("Error fetching tasks:", err.message);
+    console.error("Error fetching emails:", err.message);
     return res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/test-gmail", async (req, res) => {
+// Helper function to extract full email body
+function getEmailBody(payload: any): string {
+  let body = '';
+
+  function decodeBase64(data: string): string {
+    try {
+      return Buffer.from(data, 'base64').toString('utf-8');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  if (payload.body?.data) {
+    body = decodeBase64(payload.body.data);
+  }
+  else if (payload.parts) {
+    for (const part of payload.parts) {
+      if (part.mimeType === 'text/plain' && part.body?.data) {
+        body = decodeBase64(part.body.data);
+        break;
+      }
+      if (part.parts) {
+        for (const subPart of part.parts) {
+          if (subPart.mimeType === 'text/plain' && subPart.body?.data) {
+            body = decodeBase64(subPart.body.data);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!body) {
+      for (const part of payload.parts) {
+        if (part.mimeType === 'text/html' && part.body?.data) {
+          body = decodeBase64(part.body.data);
+          body = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          break;
+        }
+      }
+    }
+  }
+
+  return body.substring(0, 2000);
+}
+
+app.post("/sync-emails", async (req, res) => {
   const { refreshToken, userId } = req.body;
 
   if (!refreshToken) {
@@ -70,10 +125,12 @@ app.post("/test-gmail", async (req, res) => {
     const list = await gmail.users.messages.list({
       userId: "me",
       q: "is:unread",
-      maxResults: 5,
+      maxResults: 10,
     });
 
     const messages = [];
+    const processedEmails = [];
+    const skippedEmails = [];
 
     for (const msg of list.data.messages || []) {
       const fullMsg = await gmail.users.messages.get({
@@ -87,29 +144,36 @@ app.post("/test-gmail", async (req, res) => {
         headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
       const from =
         headers.find((h) => h.name === "From")?.value || "(Unknown Sender)";
+      
+      // Extract full body
+      const body = getEmailBody(fullMsg.data.payload);
       const snippet = fullMsg.data.snippet || "";
+      const labelIds = fullMsg.data.labelIds || [];
 
       messages.push({
         id: msg.id!,
         subject,
         from,
-        snippet,
+        snippet: body || snippet, // Use full body, fallback to snippet
+        labelIds,
       });
     }
 
     for (const message of messages) {
       try {
-        const existing = await prisma.task.findUnique({
+        const existing = await prisma.email.findUnique({
           where: { emailId: message.id },
         });
 
         if (existing) {
+          skippedEmails.push(message.id);
           continue;
         }
 
+        // Pass message with full body as snippet
         const aiSummary = await summarizeEmail(message);
 
-        await prisma.task.create({
+        await prisma.email.create({
           data: {
             userId,
             emailId: message.id,
@@ -117,8 +181,15 @@ app.post("/test-gmail", async (req, res) => {
             summary: aiSummary.summary,
             priority: aiSummary.priority,
             action: aiSummary.action ?? "",
-            dueDate: aiSummary.dueDate,
+            dueDate: aiSummary.dueDate ? new Date(aiSummary.dueDate) : null,
           },
+        });
+
+        processedEmails.push({
+          id: message.id,
+          subject: message.subject,
+          priority: aiSummary.priority,
+          dueDate: aiSummary.dueDate, // Log for debugging
         });
       } catch (emailErr: any) {
         console.error(`Failed to process email ${message.id}:`, emailErr.message);
@@ -128,11 +199,13 @@ app.post("/test-gmail", async (req, res) => {
     return res.json({ 
       success: true,
       accessToken: accessToken.token, 
-      messages,
-      processedCount: messages.length
+      totalFetched: messages.length,
+      processed: processedEmails.length,
+      skipped: skippedEmails.length,
+      processedEmails,
     });
   } catch (err: any) {
-    console.error("Error processing Gmail request:", err.message);
+    console.error("Error syncing Gmail:", err.message);
     
     return res.status(500).json({ 
       error: err.message,
@@ -142,13 +215,52 @@ app.post("/test-gmail", async (req, res) => {
   }
 });
 
+app.delete("/emails/:emailId", async (req, res) => {
+  const { emailId } = req.params;
+
+  try {
+    await prisma.email.delete({
+      where: { id: emailId }
+    });
+
+    return res.json({ success: true, message: "Email deleted" });
+  } catch (err: any) {
+    console.error("Error deleting email:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch("/emails/:emailId", async (req, res) => {
+  const { emailId } = req.params;
+  const { priority } = req.body;
+
+  if (!['high', 'medium', 'low'].includes(priority)) {
+    return res.status(400).json({ error: "Invalid priority value" });
+  }
+
+  try {
+    const updated = await prisma.email.update({
+      where: { id: emailId },
+      data: { priority }
+    });
+
+    return res.json({ success: true, email: updated });
+  } catch (err: any) {
+    console.error("Error updating email:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 app.use((req, res) => {
   res.status(404).json({ 
     error: "Not Found", 
     message: `Cannot ${req.method} ${req.path}`,
     availableRoutes: [
       "GET /health",
-      "POST /test-gmail"
+      "GET /emails/:userId",
+      "POST /sync-emails",
+      "DELETE /emails/:emailId",
+      "PATCH /emails/:emailId"
     ]
   });
 });
@@ -160,3 +272,4 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+

@@ -5,8 +5,7 @@ import { Header } from "../../components/Header";
 import { AISummary } from "../../components/AiSummary";
 import { StatsGrid } from "../../components/StatsGrid";
 
-
-interface Task {
+interface Email {
   id: string;
   subject: string;
   summary: string | null;
@@ -16,7 +15,7 @@ interface Task {
   createdAt: string;
 }
 
-interface TaskStats {
+interface EmailStats {
   total: number;
   high: number;
   medium: number;
@@ -32,22 +31,29 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  // Sync emails in background
-  await fetch("http://localhost:4000/test-gmail", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      refreshToken: session.user.refreshToken,
-      userId: session.user.id,
-    }),
-  });
+  try {
+    // Sync emails in background
+    await fetch("http://localhost:4000/sync-emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        refreshToken: session.user.refreshToken,
+        userId: session.user.id,
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to sync emails:", error);
+    // Continue to show existing emails even if sync fails
+  }
 
-  const tasksResponse = await fetch(
-    `http://localhost:4000/tasks/${session.user.id}`,
+  // Fetch emails from database
+  const emailsResponse = await fetch(
+    `http://localhost:4000/emails/${session.user.id}`,
     { cache: "no-store" }
   );
-  const { tasks, stats }: { tasks: Task[]; stats: TaskStats } =
-    await tasksResponse.json();
+  
+  const { emails, stats }: { emails: Email[]; stats: EmailStats } =
+    await emailsResponse.json();
 
   const user = session.user;
 
@@ -56,10 +62,10 @@ export default async function DashboardPage() {
       <Header user={user} />
       
       {user.name && (
-        <AISummary user={{ name: user.name }} stats={stats} tasks={tasks} />
+        <AISummary user={{ name: user.name }} stats={stats} emails={emails} />
       )}
 
-      <StatsGrid stats={stats} tasks={tasks} />
+      <StatsGrid stats={stats} emails={emails} />
     </main>
   );
 }

@@ -8,7 +8,7 @@ interface AISummaryProps {
     withActions: number;
     withDueDates: number;
   };
-  tasks: Array<{
+  emails: Array<{
     priority: string | null;
     dueDate: string | null;
     action: string | null;
@@ -16,7 +16,7 @@ interface AISummaryProps {
   }>;
 }
 
-export function AISummary({ user, stats, tasks }: AISummaryProps) {
+export function AISummary({ user, stats, emails }: AISummaryProps) {
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -36,7 +36,7 @@ export function AISummary({ user, stats, tasks }: AISummaryProps) {
     }
 
     if (stats.withDueDates > 0) {
-      const upcomingDeadlines = tasks.filter(t => {
+      const upcomingDeadlines = emails.filter(t => {
         if (!t.dueDate) return false;
         const daysUntil = Math.ceil(
           (new Date(t.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
