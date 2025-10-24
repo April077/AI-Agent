@@ -5,7 +5,7 @@ interface Email {
   id: string;
   priority: string | null;
   action: string | null;
-  dueDate: string | null;
+  dueDate: Date | null;
 }
 
 interface TaskStats {

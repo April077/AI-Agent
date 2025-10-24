@@ -68,10 +68,10 @@ export default async function LandingPage() {
       {/* CTA Section */}
       {!session && (
         <section className="py-20 px-6 bg-gray-800 text-center flex flex-col items-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl text-white font-bold mb-6">
             Ready to boost your productivity with AI?
           </h2>
-          <p className="text-lg mb-8">
+          <p className="text-lg text-white mb-8">
             Sign in with Google and let your intelligent assistant handle the rest.
           </p>
           <SignInButton signedIn={false} />

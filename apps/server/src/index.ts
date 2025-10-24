@@ -1,6 +1,4 @@
-// ============================================
-// FILE 1: server.ts (or index.ts)
-// ============================================
+
 import express from "express";
 import { google } from "googleapis";
 import dotenv from "dotenv";
@@ -16,6 +14,7 @@ app.use(cors({
   origin: process.env.HOSTURL || "http://localhost:3000", 
   credentials: true 
 }));
+
 app.use(express.json());
 
 app.get("/health", (req, res) => {

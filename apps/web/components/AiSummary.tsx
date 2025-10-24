@@ -10,8 +10,8 @@ interface AISummaryProps {
   };
   emails: Array<{
     priority: string | null;
-    dueDate: string | null;
-    action: string | null;
+    dueDate: Date | null;
+    action: string| null;
     subject: string;
   }>;
 }
@@ -30,16 +30,17 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
     if (stats.high > 0) {
       insights.push({
         icon: "🚨",
-        text: `${stats.high} high-priority ${stats.high === 1 ? 'email needs' : 'emails need'} immediate attention`,
-        color: "text-red-600"
+        text: `${stats.high} high-priority ${stats.high === 1 ? "email needs" : "emails need"} immediate attention`,
+        color: "text-red-600",
       });
     }
 
     if (stats.withDueDates > 0) {
-      const upcomingDeadlines = emails.filter(t => {
+      const upcomingDeadlines = emails.filter((t) => {
         if (!t.dueDate) return false;
         const daysUntil = Math.ceil(
-          (new Date(t.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          (new Date(t.dueDate).getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
         );
         return daysUntil <= 3 && daysUntil >= 0;
       }).length;
@@ -47,8 +48,8 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
       if (upcomingDeadlines > 0) {
         insights.push({
           icon: "⏰",
-          text: `${upcomingDeadlines} ${upcomingDeadlines === 1 ? 'deadline is' : 'deadlines are'} coming up in the next 3 days`,
-          color: "text-orange-600"
+          text: `${upcomingDeadlines} ${upcomingDeadlines === 1 ? "deadline is" : "deadlines are"} coming up in the next 3 days`,
+          color: "text-orange-600",
         });
       }
     }
@@ -56,8 +57,8 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
     if (stats.withActions > 0) {
       insights.push({
         icon: "✅",
-        text: `${stats.withActions} ${stats.withActions === 1 ? 'email requires' : 'emails require'} your action`,
-        color: "text-blue-600"
+        text: `${stats.withActions} ${stats.withActions === 1 ? "email requires" : "emails require"} your action`,
+        color: "text-blue-600",
       });
     }
 
@@ -65,7 +66,7 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
       insights.push({
         icon: "🎉",
         text: "All caught up! No new emails to process.",
-        color: "text-green-600"
+        color: "text-green-600",
       });
     }
 
@@ -79,10 +80,11 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold">
-            {getGreeting()}, {user.name.split(' ')[0]}! 👋
+            {getGreeting()}, {user.name.split(" ")[0]}! 👋
           </h1>
           <p className="text-blue-100 mt-1">
-            AI Agent analyzed {stats.total} {stats.total === 1 ? 'email' : 'emails'}
+            AI Agent analyzed {stats.total}{" "}
+            {stats.total === 1 ? "email" : "emails"}
           </p>
         </div>
         <div className="hidden md:block">
@@ -115,10 +117,12 @@ export function AISummary({ user, stats, emails }: AISummaryProps) {
 
       {/* AI Insights */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-sm text-blue-100 mb-3">🤖 AI Insights</h3>
+        <h3 className="font-semibold text-sm text-blue-100 mb-3">
+          🤖 AI Insights
+        </h3>
         {insights.length > 0 ? (
           insights.map((insight, idx) => (
-            <div 
+            <div
               key={idx}
               className="bg-white/10 backdrop-blur rounded-lg px-4 py-2 flex items-center gap-3"
             >
