@@ -1,19 +1,21 @@
-
 import express from "express";
 import { google } from "googleapis";
 import dotenv from "dotenv";
 import cors from "cors";
 import { summarizeEmail } from "./summarizeEmail";
 import { prisma } from "@repo/db";
+import { addEventToGoogleCalendar, isMeetingEmail } from "./googleCalender";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors({ 
-  origin: process.env.HOSTURL || "http://localhost:3000", 
-  credentials: true 
-}));
+app.use(
+  cors({
+    origin: process.env.HOSTURL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -27,24 +29,24 @@ app.get("/emails/:userId", async (req, res) => {
 
   try {
     const whereClause: any = { userId };
-    
-    if (priority && ['high', 'medium', 'low'].includes(priority as string)) {
+
+    if (priority && ["high", "medium", "low"].includes(priority as string)) {
       whereClause.priority = priority;
     }
 
     const emails = await prisma.email.findMany({
       where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      take: 50
+      orderBy: { createdAt: "desc" },
+      take: 50,
     });
 
     const stats = {
       total: emails.length,
-      high: emails.filter(e => e.priority === 'high').length,
-      medium: emails.filter(e => e.priority === 'medium').length,
-      low: emails.filter(e => e.priority === 'low').length,
-      withActions: emails.filter(e => e.action).length,
-      withDueDates: emails.filter(e => e.dueDate).length,
+      high: emails.filter((e) => e.priority === "high").length,
+      medium: emails.filter((e) => e.priority === "medium").length,
+      low: emails.filter((e) => e.priority === "low").length,
+      withActions: emails.filter((e) => e.action).length,
+      withDueDates: emails.filter((e) => e.dueDate).length,
     };
 
     return res.json({ emails, stats });
@@ -56,28 +58,27 @@ app.get("/emails/:userId", async (req, res) => {
 
 // Helper function to extract full email body
 function getEmailBody(payload: any): string {
-  let body = '';
+  let body = "";
 
   function decodeBase64(data: string): string {
     try {
-      return Buffer.from(data, 'base64').toString('utf-8');
+      return Buffer.from(data, "base64").toString("utf-8");
     } catch (e) {
-      return '';
+      return "";
     }
   }
 
   if (payload.body?.data) {
     body = decodeBase64(payload.body.data);
-  }
-  else if (payload.parts) {
+  } else if (payload.parts) {
     for (const part of payload.parts) {
-      if (part.mimeType === 'text/plain' && part.body?.data) {
+      if (part.mimeType === "text/plain" && part.body?.data) {
         body = decodeBase64(part.body.data);
         break;
       }
       if (part.parts) {
         for (const subPart of part.parts) {
-          if (subPart.mimeType === 'text/plain' && subPart.body?.data) {
+          if (subPart.mimeType === "text/plain" && subPart.body?.data) {
             body = decodeBase64(subPart.body.data);
             break;
           }
@@ -87,9 +88,12 @@ function getEmailBody(payload: any): string {
 
     if (!body) {
       for (const part of payload.parts) {
-        if (part.mimeType === 'text/html' && part.body?.data) {
+        if (part.mimeType === "text/html" && part.body?.data) {
           body = decodeBase64(part.body.data);
-          body = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          body = body
+            .replace(/<[^>]*>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
           break;
         }
       }
@@ -143,7 +147,7 @@ app.post("/sync-emails", async (req, res) => {
         headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
       const from =
         headers.find((h) => h.name === "From")?.value || "(Unknown Sender)";
-      
+
       // Extract full body
       const body = getEmailBody(fullMsg.data.payload);
       const snippet = fullMsg.data.snippet || "";
@@ -172,6 +176,16 @@ app.post("/sync-emails", async (req, res) => {
         // Pass message with full body as snippet
         const aiSummary = await summarizeEmail(message);
 
+        if (
+          isMeetingEmail(message.subject, message.snippet) &&
+          aiSummary.dueDate
+        ) {
+          await addEventToGoogleCalendar(refreshToken, {
+            summary: message.subject,
+            dueDate: aiSummary.dueDate,
+          });
+        }
+
         await prisma.email.create({
           data: {
             userId,
@@ -191,13 +205,16 @@ app.post("/sync-emails", async (req, res) => {
           dueDate: aiSummary.dueDate, // Log for debugging
         });
       } catch (emailErr: any) {
-        console.error(`Failed to process email ${message.id}:`, emailErr.message);
+        console.error(
+          `Failed to process email ${message.id}:`,
+          emailErr.message
+        );
       }
     }
-    
-    return res.json({ 
+
+    return res.json({
       success: true,
-      accessToken: accessToken.token, 
+      accessToken: accessToken.token,
       totalFetched: messages.length,
       processed: processedEmails.length,
       skipped: skippedEmails.length,
@@ -205,11 +222,11 @@ app.post("/sync-emails", async (req, res) => {
     });
   } catch (err: any) {
     console.error("Error syncing Gmail:", err.message);
-    
-    return res.status(500).json({ 
+
+    return res.status(500).json({
       error: err.message,
       details: err.response?.data,
-      code: err.code 
+      code: err.code,
     });
   }
 });
@@ -219,7 +236,7 @@ app.delete("/emails/:emailId", async (req, res) => {
 
   try {
     await prisma.email.delete({
-      where: { id: emailId }
+      where: { id: emailId },
     });
 
     return res.json({ success: true, message: "Email deleted" });
@@ -233,14 +250,14 @@ app.patch("/emails/:emailId", async (req, res) => {
   const { emailId } = req.params;
   const { priority } = req.body;
 
-  if (!['high', 'medium', 'low'].includes(priority)) {
+  if (!["high", "medium", "low"].includes(priority)) {
     return res.status(400).json({ error: "Invalid priority value" });
   }
 
   try {
     const updated = await prisma.email.update({
       where: { id: emailId },
-      data: { priority }
+      data: { priority },
     });
 
     return res.json({ success: true, email: updated });
@@ -251,24 +268,32 @@ app.patch("/emails/:emailId", async (req, res) => {
 });
 
 app.use((req, res) => {
-  res.status(404).json({ 
-    error: "Not Found", 
+  res.status(404).json({
+    error: "Not Found",
     message: `Cannot ${req.method} ${req.path}`,
     availableRoutes: [
       "GET /health",
       "GET /emails/:userId",
       "POST /sync-emails",
       "DELETE /emails/:emailId",
-      "PATCH /emails/:emailId"
-    ]
+      "PATCH /emails/:emailId",
+    ],
   });
 });
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error("Server error:", err.message);
-  res.status(500).json({ error: "Internal server error", message: err.message });
-});
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error("Server error:", err.message);
+    res
+      .status(500)
+      .json({ error: "Internal server error", message: err.message });
+  }
+);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-
