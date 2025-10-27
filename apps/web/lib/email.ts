@@ -26,7 +26,6 @@ interface SyncResponse {
   }>;
 }
 
-// 📨 FETCH EMAILS
 export async function fetchEmails(userId: string): Promise<EmailResponse> {
   console.log("[fetchEmails] Called with userId:", userId);
 
@@ -42,7 +41,10 @@ export async function fetchEmails(userId: string): Promise<EmailResponse> {
     }
 
     const data = await response.json();
-    console.log("[fetchEmails] Success — emails fetched:", data.emails?.length || 0);
+    console.log(
+      "[fetchEmails] Success — emails fetched:",
+      data.emails?.length || 0
+    );
     return data;
   } catch (error) {
     console.error("[fetchEmails] Error:", error);
@@ -66,7 +68,10 @@ export async function syncEmails(
   userId: string
 ): Promise<SyncResponse> {
   console.log("[syncEmails] Starting sync for user:", userId);
-  console.log("[syncEmails] Using refreshToken (first 10 chars):", refreshToken?.slice(0, 10));
+  console.log(
+    "[syncEmails] Using refreshToken (first 10 chars):",
+    refreshToken?.slice(0, 10)
+  );
 
   try {
     const response = await fetch("http://localhost:4000/sync-emails", {
@@ -125,58 +130,5 @@ export async function syncEmails(
       skipped: 0,
       processedEmails: [],
     };
-  }
-}
-
-// 🗑️ DELETE EMAIL
-export async function deleteEmail(emailId: string): Promise<boolean> {
-  console.log("[deleteEmail] Attempting to delete:", emailId);
-  try {
-    const response = await fetch(`http://localhost:4000/emails/${emailId}`, {
-      method: "DELETE",
-    });
-
-    console.log("[deleteEmail] Response:", response.status);
-
-    if (!response.ok) {
-      console.error("[deleteEmail] Failed to delete email");
-      return false;
-    }
-
-    console.log("[deleteEmail] ✅ Email deleted successfully");
-    return true;
-  } catch (error) {
-    console.error("[deleteEmail] Error:", error);
-    return false;
-  }
-}
-
-// 🟡 UPDATE PRIORITY
-export async function updateEmailPriority(
-  emailId: string,
-  priority: "high" | "medium" | "low"
-): Promise<boolean> {
-  console.log("[updateEmailPriority] Updating", emailId, "to", priority);
-  try {
-    const response = await fetch(`http://localhost:4000/emails/${emailId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ priority }),
-    });
-
-    console.log("[updateEmailPriority] Response:", response.status);
-
-    if (!response.ok) {
-      console.error("[updateEmailPriority] Failed to update email priority");
-      return false;
-    }
-
-    console.log("[updateEmailPriority] ✅ Priority updated successfully");
-    return true;
-  } catch (error) {
-    console.error("[updateEmailPriority] Error:", error);
-    return false;
   }
 }

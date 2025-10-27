@@ -5,6 +5,8 @@ import cors from "cors";
 import { summarizeEmail } from "./summarizeEmail";
 import { prisma } from "@repo/db";
 import { addEventToGoogleCalendar, isMeetingEmail } from "./googleCalender";
+import "./workers/emailFetcher";
+import "./workers/aiProcessor";
 
 dotenv.config();
 
@@ -186,18 +188,6 @@ app.post("/sync-emails", async (req, res) => {
           });
         }
 
-        await prisma.email.create({
-          data: {
-            userId,
-            emailId: message.id,
-            subject: message.subject,
-            summary: aiSummary.summary,
-            priority: aiSummary.priority,
-            action: aiSummary.action ?? "",
-            dueDate: aiSummary.dueDate ? new Date(aiSummary.dueDate) : null,
-          },
-        });
-
         processedEmails.push({
           id: message.id,
           subject: message.subject,
@@ -228,42 +218,6 @@ app.post("/sync-emails", async (req, res) => {
       details: err.response?.data,
       code: err.code,
     });
-  }
-});
-
-app.delete("/emails/:emailId", async (req, res) => {
-  const { emailId } = req.params;
-
-  try {
-    await prisma.email.delete({
-      where: { id: emailId },
-    });
-
-    return res.json({ success: true, message: "Email deleted" });
-  } catch (err: any) {
-    console.error("Error deleting email:", err.message);
-    return res.status(500).json({ error: err.message });
-  }
-});
-
-app.patch("/emails/:emailId", async (req, res) => {
-  const { emailId } = req.params;
-  const { priority } = req.body;
-
-  if (!["high", "medium", "low"].includes(priority)) {
-    return res.status(400).json({ error: "Invalid priority value" });
-  }
-
-  try {
-    const updated = await prisma.email.update({
-      where: { id: emailId },
-      data: { priority },
-    });
-
-    return res.json({ success: true, email: updated });
-  } catch (err: any) {
-    console.error("Error updating email:", err.message);
-    return res.status(500).json({ error: err.message });
   }
 });
 

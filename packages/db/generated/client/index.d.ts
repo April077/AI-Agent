@@ -2412,6 +2412,10 @@ export namespace Prisma {
     id: string | null
     userId: string | null
     emailId: string | null
+    from: string | null
+    snippet: string | null
+    receivedAt: Date | null
+    processed: boolean | null
     subject: string | null
     summary: string | null
     priority: string | null
@@ -2424,6 +2428,10 @@ export namespace Prisma {
     id: string | null
     userId: string | null
     emailId: string | null
+    from: string | null
+    snippet: string | null
+    receivedAt: Date | null
+    processed: boolean | null
     subject: string | null
     summary: string | null
     priority: string | null
@@ -2436,6 +2444,10 @@ export namespace Prisma {
     id: number
     userId: number
     emailId: number
+    from: number
+    snippet: number
+    receivedAt: number
+    processed: number
     subject: number
     summary: number
     priority: number
@@ -2450,6 +2462,10 @@ export namespace Prisma {
     id?: true
     userId?: true
     emailId?: true
+    from?: true
+    snippet?: true
+    receivedAt?: true
+    processed?: true
     subject?: true
     summary?: true
     priority?: true
@@ -2462,6 +2478,10 @@ export namespace Prisma {
     id?: true
     userId?: true
     emailId?: true
+    from?: true
+    snippet?: true
+    receivedAt?: true
+    processed?: true
     subject?: true
     summary?: true
     priority?: true
@@ -2474,6 +2494,10 @@ export namespace Prisma {
     id?: true
     userId?: true
     emailId?: true
+    from?: true
+    snippet?: true
+    receivedAt?: true
+    processed?: true
     subject?: true
     summary?: true
     priority?: true
@@ -2559,10 +2583,14 @@ export namespace Prisma {
     id: string
     userId: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date
+    processed: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary: string | null
+    priority: string | null
+    action: string | null
     dueDate: Date | null
     createdAt: Date
     _count: EmailCountAggregateOutputType | null
@@ -2588,6 +2616,10 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     emailId?: boolean
+    from?: boolean
+    snippet?: boolean
+    receivedAt?: boolean
+    processed?: boolean
     subject?: boolean
     summary?: boolean
     priority?: boolean
@@ -2601,6 +2633,10 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     emailId?: boolean
+    from?: boolean
+    snippet?: boolean
+    receivedAt?: boolean
+    processed?: boolean
     subject?: boolean
     summary?: boolean
     priority?: boolean
@@ -2614,6 +2650,10 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     emailId?: boolean
+    from?: boolean
+    snippet?: boolean
+    receivedAt?: boolean
+    processed?: boolean
     subject?: boolean
     summary?: boolean
     priority?: boolean
@@ -2627,6 +2667,10 @@ export namespace Prisma {
     id?: boolean
     userId?: boolean
     emailId?: boolean
+    from?: boolean
+    snippet?: boolean
+    receivedAt?: boolean
+    processed?: boolean
     subject?: boolean
     summary?: boolean
     priority?: boolean
@@ -2635,7 +2679,7 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type EmailOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "emailId" | "subject" | "summary" | "priority" | "action" | "dueDate" | "createdAt", ExtArgs["result"]["email"]>
+  export type EmailOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "emailId" | "from" | "snippet" | "receivedAt" | "processed" | "subject" | "summary" | "priority" | "action" | "dueDate" | "createdAt", ExtArgs["result"]["email"]>
   export type EmailInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -2655,10 +2699,14 @@ export namespace Prisma {
       id: string
       userId: string
       emailId: string
+      from: string
+      snippet: string
+      receivedAt: Date
+      processed: boolean
       subject: string
-      summary: string
-      priority: string
-      action: string
+      summary: string | null
+      priority: string | null
+      action: string | null
       dueDate: Date | null
       createdAt: Date
     }, ExtArgs["result"]["email"]>
@@ -3088,6 +3136,10 @@ export namespace Prisma {
     readonly id: FieldRef<"Email", 'String'>
     readonly userId: FieldRef<"Email", 'String'>
     readonly emailId: FieldRef<"Email", 'String'>
+    readonly from: FieldRef<"Email", 'String'>
+    readonly snippet: FieldRef<"Email", 'String'>
+    readonly receivedAt: FieldRef<"Email", 'DateTime'>
+    readonly processed: FieldRef<"Email", 'Boolean'>
     readonly subject: FieldRef<"Email", 'String'>
     readonly summary: FieldRef<"Email", 'String'>
     readonly priority: FieldRef<"Email", 'String'>
@@ -6751,6 +6803,10 @@ export namespace Prisma {
     id: 'id',
     userId: 'userId',
     emailId: 'emailId',
+    from: 'from',
+    snippet: 'snippet',
+    receivedAt: 'receivedAt',
+    processed: 'processed',
     subject: 'subject',
     summary: 'summary',
     priority: 'priority',
@@ -6858,6 +6914,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -6956,10 +7019,14 @@ export namespace Prisma {
     id?: StringFilter<"Email"> | string
     userId?: StringFilter<"Email"> | string
     emailId?: StringFilter<"Email"> | string
+    from?: StringFilter<"Email"> | string
+    snippet?: StringFilter<"Email"> | string
+    receivedAt?: DateTimeFilter<"Email"> | Date | string
+    processed?: BoolFilter<"Email"> | boolean
     subject?: StringFilter<"Email"> | string
-    summary?: StringFilter<"Email"> | string
-    priority?: StringFilter<"Email"> | string
-    action?: StringFilter<"Email"> | string
+    summary?: StringNullableFilter<"Email"> | string | null
+    priority?: StringNullableFilter<"Email"> | string | null
+    action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -6969,10 +7036,14 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     emailId?: SortOrder
+    from?: SortOrder
+    snippet?: SortOrder
+    receivedAt?: SortOrder
+    processed?: SortOrder
     subject?: SortOrder
-    summary?: SortOrder
-    priority?: SortOrder
-    action?: SortOrder
+    summary?: SortOrderInput | SortOrder
+    priority?: SortOrderInput | SortOrder
+    action?: SortOrderInput | SortOrder
     dueDate?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -6985,10 +7056,14 @@ export namespace Prisma {
     OR?: EmailWhereInput[]
     NOT?: EmailWhereInput | EmailWhereInput[]
     userId?: StringFilter<"Email"> | string
+    from?: StringFilter<"Email"> | string
+    snippet?: StringFilter<"Email"> | string
+    receivedAt?: DateTimeFilter<"Email"> | Date | string
+    processed?: BoolFilter<"Email"> | boolean
     subject?: StringFilter<"Email"> | string
-    summary?: StringFilter<"Email"> | string
-    priority?: StringFilter<"Email"> | string
-    action?: StringFilter<"Email"> | string
+    summary?: StringNullableFilter<"Email"> | string | null
+    priority?: StringNullableFilter<"Email"> | string | null
+    action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -6998,10 +7073,14 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     emailId?: SortOrder
+    from?: SortOrder
+    snippet?: SortOrder
+    receivedAt?: SortOrder
+    processed?: SortOrder
     subject?: SortOrder
-    summary?: SortOrder
-    priority?: SortOrder
-    action?: SortOrder
+    summary?: SortOrderInput | SortOrder
+    priority?: SortOrderInput | SortOrder
+    action?: SortOrderInput | SortOrder
     dueDate?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: EmailCountOrderByAggregateInput
@@ -7016,10 +7095,14 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Email"> | string
     userId?: StringWithAggregatesFilter<"Email"> | string
     emailId?: StringWithAggregatesFilter<"Email"> | string
+    from?: StringWithAggregatesFilter<"Email"> | string
+    snippet?: StringWithAggregatesFilter<"Email"> | string
+    receivedAt?: DateTimeWithAggregatesFilter<"Email"> | Date | string
+    processed?: BoolWithAggregatesFilter<"Email"> | boolean
     subject?: StringWithAggregatesFilter<"Email"> | string
-    summary?: StringWithAggregatesFilter<"Email"> | string
-    priority?: StringWithAggregatesFilter<"Email"> | string
-    action?: StringWithAggregatesFilter<"Email"> | string
+    summary?: StringNullableWithAggregatesFilter<"Email"> | string | null
+    priority?: StringNullableWithAggregatesFilter<"Email"> | string | null
+    action?: StringNullableWithAggregatesFilter<"Email"> | string | null
     dueDate?: DateTimeNullableWithAggregatesFilter<"Email"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Email"> | Date | string
   }
@@ -7286,10 +7369,14 @@ export namespace Prisma {
   export type EmailCreateInput = {
     id?: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutEmailsInput
@@ -7299,10 +7386,14 @@ export namespace Prisma {
     id?: string
     userId: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
   }
@@ -7310,10 +7401,14 @@ export namespace Prisma {
   export type EmailUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutEmailsNestedInput
@@ -7323,10 +7418,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7335,10 +7434,14 @@ export namespace Prisma {
     id?: string
     userId: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
   }
@@ -7346,10 +7449,14 @@ export namespace Prisma {
   export type EmailUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7358,10 +7465,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7728,6 +7839,11 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type UserScalarRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
@@ -7737,6 +7853,10 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     emailId?: SortOrder
+    from?: SortOrder
+    snippet?: SortOrder
+    receivedAt?: SortOrder
+    processed?: SortOrder
     subject?: SortOrder
     summary?: SortOrder
     priority?: SortOrder
@@ -7749,6 +7869,10 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     emailId?: SortOrder
+    from?: SortOrder
+    snippet?: SortOrder
+    receivedAt?: SortOrder
+    processed?: SortOrder
     subject?: SortOrder
     summary?: SortOrder
     priority?: SortOrder
@@ -7761,6 +7885,10 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     emailId?: SortOrder
+    from?: SortOrder
+    snippet?: SortOrder
+    receivedAt?: SortOrder
+    processed?: SortOrder
     subject?: SortOrder
     summary?: SortOrder
     priority?: SortOrder
@@ -7781,6 +7909,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
@@ -8065,6 +8201,10 @@ export namespace Prisma {
     set?: Date | string
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type UserUpdateOneRequiredWithoutEmailsNestedInput = {
     create?: XOR<UserCreateWithoutEmailsInput, UserUncheckedCreateWithoutEmailsInput>
     connectOrCreate?: UserCreateOrConnectWithoutEmailsInput
@@ -8229,6 +8369,11 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -8241,6 +8386,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -8335,10 +8488,14 @@ export namespace Prisma {
   export type EmailCreateWithoutUserInput = {
     id?: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
   }
@@ -8346,10 +8503,14 @@ export namespace Prisma {
   export type EmailUncheckedCreateWithoutUserInput = {
     id?: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
   }
@@ -8448,10 +8609,14 @@ export namespace Prisma {
     id?: StringFilter<"Email"> | string
     userId?: StringFilter<"Email"> | string
     emailId?: StringFilter<"Email"> | string
+    from?: StringFilter<"Email"> | string
+    snippet?: StringFilter<"Email"> | string
+    receivedAt?: DateTimeFilter<"Email"> | Date | string
+    processed?: BoolFilter<"Email"> | boolean
     subject?: StringFilter<"Email"> | string
-    summary?: StringFilter<"Email"> | string
-    priority?: StringFilter<"Email"> | string
-    action?: StringFilter<"Email"> | string
+    summary?: StringNullableFilter<"Email"> | string | null
+    priority?: StringNullableFilter<"Email"> | string | null
+    action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
   }
@@ -8648,10 +8813,14 @@ export namespace Prisma {
   export type EmailCreateManyUserInput = {
     id?: string
     emailId: string
+    from: string
+    snippet: string
+    receivedAt: Date | string
+    processed?: boolean
     subject: string
-    summary: string
-    priority: string
-    action: string
+    summary?: string | null
+    priority?: string | null
+    action?: string | null
     dueDate?: Date | string | null
     createdAt?: Date | string
   }
@@ -8722,10 +8891,14 @@ export namespace Prisma {
   export type EmailUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8733,10 +8906,14 @@ export namespace Prisma {
   export type EmailUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8744,10 +8921,14 @@ export namespace Prisma {
   export type EmailUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     emailId?: StringFieldUpdateOperationsInput | string
+    from?: StringFieldUpdateOperationsInput | string
+    snippet?: StringFieldUpdateOperationsInput | string
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processed?: BoolFieldUpdateOperationsInput | boolean
     subject?: StringFieldUpdateOperationsInput | string
-    summary?: StringFieldUpdateOperationsInput | string
-    priority?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
+    summary?: NullableStringFieldUpdateOperationsInput | string | null
+    priority?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
