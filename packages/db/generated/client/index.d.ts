@@ -2421,6 +2421,7 @@ export namespace Prisma {
     priority: string | null
     action: string | null
     dueDate: Date | null
+    dueTime: string | null
     createdAt: Date | null
   }
 
@@ -2437,6 +2438,7 @@ export namespace Prisma {
     priority: string | null
     action: string | null
     dueDate: Date | null
+    dueTime: string | null
     createdAt: Date | null
   }
 
@@ -2453,6 +2455,7 @@ export namespace Prisma {
     priority: number
     action: number
     dueDate: number
+    dueTime: number
     createdAt: number
     _all: number
   }
@@ -2471,6 +2474,7 @@ export namespace Prisma {
     priority?: true
     action?: true
     dueDate?: true
+    dueTime?: true
     createdAt?: true
   }
 
@@ -2487,6 +2491,7 @@ export namespace Prisma {
     priority?: true
     action?: true
     dueDate?: true
+    dueTime?: true
     createdAt?: true
   }
 
@@ -2503,6 +2508,7 @@ export namespace Prisma {
     priority?: true
     action?: true
     dueDate?: true
+    dueTime?: true
     createdAt?: true
     _all?: true
   }
@@ -2592,6 +2598,7 @@ export namespace Prisma {
     priority: string | null
     action: string | null
     dueDate: Date | null
+    dueTime: string | null
     createdAt: Date
     _count: EmailCountAggregateOutputType | null
     _min: EmailMinAggregateOutputType | null
@@ -2625,6 +2632,7 @@ export namespace Prisma {
     priority?: boolean
     action?: boolean
     dueDate?: boolean
+    dueTime?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["email"]>
@@ -2642,6 +2650,7 @@ export namespace Prisma {
     priority?: boolean
     action?: boolean
     dueDate?: boolean
+    dueTime?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["email"]>
@@ -2659,6 +2668,7 @@ export namespace Prisma {
     priority?: boolean
     action?: boolean
     dueDate?: boolean
+    dueTime?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["email"]>
@@ -2676,10 +2686,11 @@ export namespace Prisma {
     priority?: boolean
     action?: boolean
     dueDate?: boolean
+    dueTime?: boolean
     createdAt?: boolean
   }
 
-  export type EmailOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "emailId" | "from" | "snippet" | "receivedAt" | "processed" | "subject" | "summary" | "priority" | "action" | "dueDate" | "createdAt", ExtArgs["result"]["email"]>
+  export type EmailOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "emailId" | "from" | "snippet" | "receivedAt" | "processed" | "subject" | "summary" | "priority" | "action" | "dueDate" | "dueTime" | "createdAt", ExtArgs["result"]["email"]>
   export type EmailInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -2708,6 +2719,7 @@ export namespace Prisma {
       priority: string | null
       action: string | null
       dueDate: Date | null
+      dueTime: string | null
       createdAt: Date
     }, ExtArgs["result"]["email"]>
     composites: {}
@@ -3145,6 +3157,7 @@ export namespace Prisma {
     readonly priority: FieldRef<"Email", 'String'>
     readonly action: FieldRef<"Email", 'String'>
     readonly dueDate: FieldRef<"Email", 'DateTime'>
+    readonly dueTime: FieldRef<"Email", 'String'>
     readonly createdAt: FieldRef<"Email", 'DateTime'>
   }
     
@@ -6812,6 +6825,7 @@ export namespace Prisma {
     priority: 'priority',
     action: 'action',
     dueDate: 'dueDate',
+    dueTime: 'dueTime',
     createdAt: 'createdAt'
   };
 
@@ -7028,6 +7042,7 @@ export namespace Prisma {
     priority?: StringNullableFilter<"Email"> | string | null
     action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
+    dueTime?: StringNullableFilter<"Email"> | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
@@ -7045,6 +7060,7 @@ export namespace Prisma {
     priority?: SortOrderInput | SortOrder
     action?: SortOrderInput | SortOrder
     dueDate?: SortOrderInput | SortOrder
+    dueTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
   }
@@ -7065,6 +7081,7 @@ export namespace Prisma {
     priority?: StringNullableFilter<"Email"> | string | null
     action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
+    dueTime?: StringNullableFilter<"Email"> | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id" | "emailId">
@@ -7082,6 +7099,7 @@ export namespace Prisma {
     priority?: SortOrderInput | SortOrder
     action?: SortOrderInput | SortOrder
     dueDate?: SortOrderInput | SortOrder
+    dueTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: EmailCountOrderByAggregateInput
     _max?: EmailMaxOrderByAggregateInput
@@ -7104,6 +7122,7 @@ export namespace Prisma {
     priority?: StringNullableWithAggregatesFilter<"Email"> | string | null
     action?: StringNullableWithAggregatesFilter<"Email"> | string | null
     dueDate?: DateTimeNullableWithAggregatesFilter<"Email"> | Date | string | null
+    dueTime?: StringNullableWithAggregatesFilter<"Email"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Email"> | Date | string
   }
 
@@ -7378,6 +7397,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutEmailsInput
   }
@@ -7395,6 +7415,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
   }
 
@@ -7410,6 +7431,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutEmailsNestedInput
   }
@@ -7427,6 +7449,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7443,6 +7466,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
   }
 
@@ -7458,6 +7482,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7474,6 +7499,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -7862,6 +7888,7 @@ export namespace Prisma {
     priority?: SortOrder
     action?: SortOrder
     dueDate?: SortOrder
+    dueTime?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -7878,6 +7905,7 @@ export namespace Prisma {
     priority?: SortOrder
     action?: SortOrder
     dueDate?: SortOrder
+    dueTime?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -7894,6 +7922,7 @@ export namespace Prisma {
     priority?: SortOrder
     action?: SortOrder
     dueDate?: SortOrder
+    dueTime?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -8497,6 +8526,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
   }
 
@@ -8512,6 +8542,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
   }
 
@@ -8618,6 +8649,7 @@ export namespace Prisma {
     priority?: StringNullableFilter<"Email"> | string | null
     action?: StringNullableFilter<"Email"> | string | null
     dueDate?: DateTimeNullableFilter<"Email"> | Date | string | null
+    dueTime?: StringNullableFilter<"Email"> | string | null
     createdAt?: DateTimeFilter<"Email"> | Date | string
   }
 
@@ -8822,6 +8854,7 @@ export namespace Prisma {
     priority?: string | null
     action?: string | null
     dueDate?: Date | string | null
+    dueTime?: string | null
     createdAt?: Date | string
   }
 
@@ -8900,6 +8933,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -8915,6 +8949,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -8930,6 +8965,7 @@ export namespace Prisma {
     priority?: NullableStringFieldUpdateOperationsInput | string | null
     action?: NullableStringFieldUpdateOperationsInput | string | null
     dueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dueTime?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "../../../lib/auth";
-import { Header } from "../../../components/Header";
 import { MeetingsClient } from "../../../components/MeetingsClient";
 
 export default async function MeetingsPage() {
@@ -10,7 +9,6 @@ export default async function MeetingsPage() {
 
   return (
     <main className="p-6">
-      <Header user={session.user} />
       <MeetingsClient userId={session.user.id} />
     </main>
   );

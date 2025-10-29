@@ -34,6 +34,7 @@ model Email {
   priority   String? // "high" | "medium" | "low"
   action     String?
   dueDate    DateTime?
+  dueTime    String?
   createdAt  DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

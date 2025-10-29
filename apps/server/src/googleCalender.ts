@@ -5,7 +5,8 @@ export async function addEventToGoogleCalendar(
   eventData: {
     summary: string;
     description?: string;
-    dueDate: string;
+    dueDate: string; // e.g. "2025-10-30"
+    dueTime: string; // e.g. "15:30" or "3:30 PM"
   }
 ) {
   const oauth2Client = new google.auth.OAuth2(
@@ -17,16 +18,32 @@ export async function addEventToGoogleCalendar(
 
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
+  // 🕒 Combine date + time (with fallback)
+  let startDateTime: Date;
+  if (eventData.dueTime) {
+    // If time is given, combine with date (handles both "15:30" and "3:30 PM")
+    const timeString = eventData.dueTime.toUpperCase().includes("AM") ||
+      eventData.dueTime.toUpperCase().includes("PM")
+      ? new Date(`${eventData.dueDate} ${eventData.dueTime}`)
+      : new Date(`${eventData.dueDate}T${eventData.dueTime}`);
+
+    startDateTime = new Date(timeString);
+  } else {
+    // fallback if no time
+    startDateTime = new Date(eventData.dueDate);
+  }
+
+  const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // default +1 hour
+
   const event = {
     summary: eventData.summary,
+    description: eventData.description || "",
     start: {
-      dateTime: new Date(eventData.dueDate).toISOString(),
+      dateTime: startDateTime.toISOString(),
       timeZone: "Asia/Kolkata",
     },
     end: {
-      dateTime: new Date(
-        new Date(eventData.dueDate).getTime() + 60 * 60 * 1000
-      ).toISOString(),
+      dateTime: endDateTime.toISOString(),
       timeZone: "Asia/Kolkata",
     },
     conferenceData: {

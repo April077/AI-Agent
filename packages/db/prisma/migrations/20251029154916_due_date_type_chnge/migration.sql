@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Email" ALTER COLUMN "dueTime" SET DATA TYPE TEXT;

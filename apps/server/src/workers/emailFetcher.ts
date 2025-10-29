@@ -8,7 +8,7 @@ function log(message: string, ...args: any[]) {
 }
 
 // ✅ Runs every 10 min
-cron.schedule("*/1 * * * *", async () => {
+cron.schedule("*/10 * * * * *", async () => {
   log("🔄 Email Fetcher: Starting cron cycle...");
 
   try {
@@ -17,9 +17,6 @@ cron.schedule("*/1 * * * *", async () => {
         accounts: true,
       },
     });
-
-    log(`👥 Found ${users.length} users with Gmail accounts.`);
-    console.log(JSON.stringify(users, null, 2));
 
     for (const user of users) {
       const account = user.accounts[0];
@@ -59,8 +56,8 @@ async function fetchAndStoreEmails(userId: string, refreshToken: string) {
   });
 
   const after =
-    lastEmail?.receivedAt || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const afterTimeStamp = Math.floor(after.getTime() / 1000);
+    lastEmail?.receivedAt || new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+  const afterTimeStamp = Math.floor(after.getTime() / 1000) + 1;
 
   log(
     `📅 Fetching messages after ${after.toISOString()} (timestamp: ${afterTimeStamp})`

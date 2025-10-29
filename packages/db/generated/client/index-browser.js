@@ -141,6 +141,7 @@ exports.Prisma.EmailScalarFieldEnum = {
   priority: 'priority',
   action: 'action',
   dueDate: 'dueDate',
+  dueTime: 'dueTime',
   createdAt: 'createdAt'
 };
 

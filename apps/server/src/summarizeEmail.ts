@@ -5,7 +5,7 @@ interface Message {
   id: string;
   subject: string;
   from: string;
-  snippet: string; // Contains full body now
+  snippet: string;
 }
 
 interface EmailResponse {
@@ -14,72 +14,81 @@ interface EmailResponse {
   priority: "high" | "medium" | "low";
   action: string | null;
   dueDate: string | null;
+  dueTime?: string | null;
 }
 
-// ============ IMPROVED AI SUMMARIZATION ============
 export async function summarizeEmail(message: Message): Promise<EmailResponse> {
+  console.log("========== START SUMMARIZATION ==========");
+  console.log("Input:", JSON.stringify(message, null, 2));
+  
   const { subject, from, snippet } = message;
-
-  // Clean HTML/formatting from snippet (which contains full body)
-  const cleanContent = getCleanEmailContent(snippet);
-
-  // Pre-filter: Skip AI for obvious low-priority patterns
-  if (shouldSkipAI(subject, cleanContent, from)) {
-    console.log(`Skipping AI for obvious low-priority email: ${subject}`);
-    return getFallbackResponse(message, cleanContent);
-  }
-
-  const prompt = buildPrompt(subject, from, cleanContent);
-
+  
   try {
+    const cleanContent = getCleanEmailContent(snippet);
+    console.log("Clean content length:", cleanContent.length);
+    console.log("Clean content preview:", cleanContent.substring(0, 200));
+
+    if (shouldSkipAI(subject, cleanContent, from)) {
+      console.log("✅ Skipping AI - using fallback");
+      return getFallbackResponse(message, cleanContent);
+    }
+
+    const prompt = buildPrompt(subject, from, cleanContent);
+    console.log("Calling AI...");
+
     const response = await callGroqWithRetry(prompt, 3);
+    console.log("AI response received");
+    
     const parsedData = parseAIResponse(response);
+    console.log("Parsed AI data:", JSON.stringify(parsedData, null, 2));
 
-    console.log("AI parsed data:", parsedData);
-
-    // Validate and clean AI response
     const finalPriority = validatePriority(subject, cleanContent, from, parsedData.priority);
-    const dueDate = validateDueDate(subject, cleanContent, from, parsedData.dueDate);
+    const { date: dueDate, time: dueTime } = validateDueDate(subject, cleanContent, from, parsedData.dueDate);
     const action = validateAction(cleanContent, parsedData.action);
 
-    return {
+    const result = {
       subject,
       summary: parsedData.summary || cleanContent.substring(0, 200),
       priority: finalPriority,
       action,
       dueDate,
+      dueTime,
     };
+    
+    console.log("Final result:", JSON.stringify(result, null, 2));
+    console.log("========== END SUMMARIZATION ==========\n");
+    
+    return result;
   } catch (error: any) {
-    console.error("AI summarization failed, using fallback:", error.message);
-    return getFallbackResponse(message, cleanContent);
+    console.error("❌ ERROR in summarizeEmail:", error);
+    console.error("Error stack:", error.stack);
+    const fallback = getFallbackResponse(message, getCleanEmailContent(snippet));
+    console.log("Returning fallback:", JSON.stringify(fallback, null, 2));
+    return fallback;
   }
 }
 
-// ============ HTML CLEANING ============
 function getCleanEmailContent(content: string): string {
-  // Remove HTML tags
-  let cleaned = content.replace(/<style[^>]*>.*?<\/style>/gis, "");
-  cleaned = cleaned.replace(/<script[^>]*>.*?<\/script>/gis, "");
-  cleaned = cleaned.replace(/<[^>]+>/g, " ");
-  
-  // Decode HTML entities
-  cleaned = cleaned
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&[a-z]+;/gi, "");
-  
-  // Clean up whitespace
-  cleaned = cleaned.replace(/\s+/g, " ").trim();
-  
-  // Limit length for API (keep first 1500 chars for context)
-  return cleaned.substring(0, 1500);
+  try {
+    let cleaned = content.replace(/<style[^>]*>.*?<\/style>/gis, "");
+    cleaned = cleaned.replace(/<script[^>]*>.*?<\/script>/gis, "");
+    cleaned = cleaned.replace(/<[^>]+>/g, " ");
+    cleaned = cleaned
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&[a-z]+;/gi, "");
+    cleaned = cleaned.replace(/\s+/g, " ").trim();
+    return cleaned.substring(0, 1500);
+  } catch (error) {
+    console.error("Error in getCleanEmailContent:", error);
+    return content.substring(0, 1500);
+  }
 }
 
-// ============ SIMPLIFIED PROMPT ============
 function buildPrompt(subject: string, from: string, content: string): string {
   return `Analyze this email and extract key information.
 
@@ -92,7 +101,7 @@ Respond with JSON only:
   "summary": "2-3 sentence summary of the email's purpose and key points",
   "priority": "high|medium|low",
   "action": "specific action needed from recipient, or null",
-  "dueDate": "YYYY-MM-DD if there's a deadline/meeting/event date, otherwise null"
+  "dueDate": "YYYY-MM-DD HH:mm if there's a specific time, or YYYY-MM-DD if only date, otherwise null"
 }
 
 Priority guidelines:
@@ -105,11 +114,8 @@ Due date guidelines:
 - DO NOT set for: OTP expiry, promotional offer ends, newsletter dates, transaction timestamps`;
 }
 
-// ============ PRE-FILTERING (OPTIMIZED) ============
 function shouldSkipAI(subject: string, content: string, from: string): boolean {
   const text = (subject + " " + content + " " + from).toLowerCase();
-
-  // Clear low-priority patterns
   const skipPatterns = [
     /\b(otp|verification code|2fa|tpin|auth code)\b/i,
     /\bvalid for \d+ (min|hour)/i,
@@ -119,11 +125,9 @@ function shouldSkipAI(subject: string, content: string, from: string): boolean {
     /(linkedin|facebook|instagram) (notification|connection)/i,
     /transaction (statement|receipt|confirmation)/i,
   ];
-
   return skipPatterns.some((pattern) => pattern.test(text));
 }
 
-// ============ PRIORITY VALIDATION ============
 function validatePriority(
   subject: string,
   content: string,
@@ -131,8 +135,6 @@ function validatePriority(
   aiPriority: string
 ): "high" | "medium" | "low" {
   const text = (subject + " " + content + " " + from).toLowerCase();
-
-  // Force LOW for definite patterns
   const forceLowPatterns = [
     /\b(otp|verification code|tpin|2fa)\b/i,
     /\bvalid for \d+/i,
@@ -141,95 +143,140 @@ function validatePriority(
     /(transaction|statement) (generated|available)/i,
     /(newsletter|digest)/i,
   ];
+  if (forceLowPatterns.some(p => p.test(text))) return "low";
 
-  if (forceLowPatterns.some(p => p.test(text))) {
-    return "low";
-  }
-
-  // Force HIGH for genuinely urgent patterns
   const forceHighPatterns = [
     /\b(urgent|asap|critical|immediate action)\b/i,
     /\b(deadline today|due today|interview today)\b/i,
     /\bfinal (notice|reminder|warning)\b/i,
   ];
+  if (forceHighPatterns.some(p => p.test(text)) && !text.includes("no-reply")) return "high";
 
-  if (forceHighPatterns.some(p => p.test(text)) && !text.includes("no-reply")) {
-    return "high";
-  }
-
-  // Trust AI for normal cases
   const priority = aiPriority?.toLowerCase();
   if (priority === "high" || priority === "medium" || priority === "low") {
     return priority as "high" | "medium" | "low";
   }
 
-  return "medium"; // Safe default
+  return "medium";
 }
 
-// ============ DUE DATE VALIDATION ============
 function validateDueDate(
   subject: string,
   content: string,
   from: string,
   aiDueDate: string | null
-): string | null {
-  const text = (subject + " " + content + " " + from).toLowerCase();
+): { date: string | null; time: string | null } {
+  try {
+    const text = (subject + " " + content + " " + from).toLowerCase();
+    const blockPatterns = [
+      /\b(otp|verification code|tpin)\b/i,
+      /\bvalid for \d+/i,
+      /\bexpires in \d+/i,
+      /no-?reply@|noreply@/i,
+      /(transaction|statement) (generated|sent|available)/i,
+      /promotional|marketing|newsletter/i,
+      /(sale|offer|deal) (ends|expires)/i,
+    ];
+    
+    if (blockPatterns.some(p => p.test(text))) {
+      console.log("Due date blocked by pattern");
+      return { date: null, time: null };
+    }
 
-  // Block due dates for these patterns
-  const blockPatterns = [
-    /\b(otp|verification code|tpin)\b/i,
-    /\bvalid for \d+/i,
-    /\bexpires in \d+/i,
-    /no-?reply@|noreply@/i,
-    /(transaction|statement) (generated|sent|available)/i,
-    /promotional|marketing|newsletter/i,
-    /(sale|offer|deal) (ends|expires)/i,
-  ];
-
-  if (blockPatterns.some(p => p.test(text))) {
-    console.log("⛔ Due date blocked: matches exclusion pattern");
-    return null;
-  }
-
-  // Try AI-provided date first
-  if (aiDueDate && aiDueDate !== "null") {
-    const parsed = new Date(aiDueDate);
-    if (!isNaN(parsed.getTime())) {
-      // Only accept future dates or today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (parsed >= today) {
-        return parsed.toISOString().split("T")[0];
+    // Try AI-provided date/time first
+    if (aiDueDate && aiDueDate !== "null") {
+      console.log("Trying AI date:", aiDueDate);
+      const parsedDateTime = parseDateTimeString(aiDueDate);
+      if (parsedDateTime.date) {
+        console.log("AI date parsed successfully:", parsedDateTime);
+        return parsedDateTime;
       }
     }
-  }
 
-  // Try parsing from subject (most reliable for meetings)
-  const subjectDate = chrono.parseDate(subject);
-  if (subjectDate && !isNaN(subjectDate.getTime())) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (subjectDate >= today) {
-      return subjectDate.toISOString().split("T")[0];
+    // Try parsing from subject
+    console.log("Trying to parse subject:", subject);
+    const subjectDateTime = parseWithChrono(subject);
+    if (subjectDateTime.date) {
+      console.log("Subject date parsed:", subjectDateTime);
+      return subjectDateTime;
     }
-  }
 
-  // Try parsing from content (less reliable, only if clear context)
-  if (hasActionableContext(text)) {
-    const contentDate = chrono.parseDate(content);
-    if (contentDate && !isNaN(contentDate.getTime())) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (contentDate >= today) {
-        return contentDate.toISOString().split("T")[0];
+    // Try parsing from content if actionable
+    if (hasActionableContext(text)) {
+      console.log("Trying to parse content (has actionable context)");
+      const contentDateTime = parseWithChrono(content);
+      if (contentDateTime.date) {
+        console.log("Content date parsed:", contentDateTime);
+        return contentDateTime;
       }
     }
-  }
 
-  return null;
+    console.log("No date found");
+    return { date: null, time: null };
+  } catch (error) {
+    console.error("Error in validateDueDate:", error);
+    return { date: null, time: null };
+  }
 }
 
-// Check if content suggests an actionable event
+function parseDateTimeString(dateStr: string): { date: string | null; time: string | null } {
+  try {
+    const parsed = new Date(dateStr);
+    if (isNaN(parsed.getTime())) {
+      return { date: null, time: null };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (parsed < today) {
+      return { date: null, time: null };
+    }
+
+    const date = parsed.toISOString().split("T")[0];
+    const hours = parsed.getHours();
+    const minutes = parsed.getMinutes();
+    const time = (hours !== 0 || minutes !== 0) 
+      ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+      : null;
+
+    return { date, time };
+  } catch {
+    return { date: null, time: null };
+  }
+}
+
+function parseWithChrono(text: string): { date: string | null; time: string | null } {
+  try {
+    const parsed = chrono.parse(text, new Date(), { forwardDate: true });
+    if (!parsed || parsed.length === 0) {
+      return { date: null, time: null };
+    }
+
+    const result = parsed[0];
+    const dateObj = result.start.date();
+    
+    if (!dateObj || isNaN(dateObj.getTime())) {
+      return { date: null, time: null };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dateObj < today) {
+      return { date: null, time: null };
+    }
+
+    const date = dateObj.toISOString().split("T")[0];
+    const hasTime = result.start.isCertain('hour');
+    const time = hasTime 
+      ? `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`
+      : null;
+
+    return { date, time };
+  } catch {
+    return { date: null, time: null };
+  }
+}
+
 function hasActionableContext(text: string): boolean {
   const actionableKeywords = [
     /\b(meeting|appointment|deadline|due date|submission|interview)\b/i,
@@ -239,42 +286,46 @@ function hasActionableContext(text: string): boolean {
   return actionableKeywords.some(k => k.test(text));
 }
 
-// ============ ACTION VALIDATION ============
 function validateAction(content: string, aiAction: string | null): string | null {
-  if (!aiAction || aiAction === "null" || aiAction.length < 10) {
-    // Extract action from content if AI didn't find one
-    return extractAction(content);
+  try {
+    if (!aiAction || aiAction === "null" || aiAction.length < 10) {
+      return extractAction(content);
+    }
+    let action = aiAction.trim();
+    action = action.replace(/^(please|kindly|you need to|you should)\s+/i, "");
+    return action.length > 5 ? action : null;
+  } catch (error) {
+    console.error("Error in validateAction:", error);
+    return null;
   }
-  
-  // Clean up AI action (remove fluff)
-  let action = aiAction.trim();
-  action = action.replace(/^(please|kindly|you need to|you should)\s+/i, "");
-  
-  return action.length > 5 ? action : null;
 }
 
 function extractAction(text: string): string | null {
-  const actionPatterns = [
-    /action required:?\s*([^.!?\n]+)/i,
-    /please\s+([^.!?\n]{10,100})/i,
-    /you (?:need|must|should)\s+([^.!?\n]{10,100})/i,
-    /(?:confirm|review|approve|respond|reply)\s+([^.!?\n]{10,100})/i,
-  ];
-
-  for (const pattern of actionPatterns) {
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      return match[1].trim().substring(0, 100);
+  try {
+    const actionPatterns = [
+      /action required:?\s*([^.!?\n]+)/i,
+      /please\s+([^.!?\n]{10,100})/i,
+      /you (?:need|must|should)\s+([^.!?\n]{10,100})/i,
+      /(?:confirm|review|approve|respond|reply)\s+([^.!?\n]{10,100})/i,
+    ];
+    for (const pattern of actionPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) return match[1].trim().substring(0, 100);
     }
+    return null;
+  } catch (error) {
+    console.error("Error in extractAction:", error);
+    return null;
   }
-
-  return null;
 }
 
-// ============ API CALL WITH RETRY ============
 async function callGroqWithRetry(prompt: string, maxRetries: number = 3) {
+  console.log("API Key exists:", !!process.env.GROQ_API_KEY);
+  
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      console.log(`API call attempt ${attempt + 1}/${maxRetries}`);
+      
       const response = await axios.post(
         "https://api.groq.com/openai/v1/chat/completions",
         {
@@ -282,7 +333,7 @@ async function callGroqWithRetry(prompt: string, maxRetries: number = 3) {
           messages: [
             {
               role: "system",
-              content: "You are an email classifier. Analyze emails objectively and return valid JSON only. Default to MEDIUM priority unless clearly urgent or clearly unimportant."
+              content: "You are an email classifier. Analyze emails objectively and return valid JSON only. Default to MEDIUM priority unless clearly urgent or clearly unimportant.",
             },
             { role: "user", content: prompt },
           ],
@@ -297,54 +348,73 @@ async function callGroqWithRetry(prompt: string, maxRetries: number = 3) {
           timeout: 30000,
         }
       );
-
+      
+      console.log("API call successful");
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
+      console.error(`Attempt ${attempt + 1} failed:`, {
+        status: axiosError.response?.status,
+        statusText: axiosError.response?.statusText,
+        data: axiosError.response?.data,
+        message: axiosError.message,
+      });
 
       if (axiosError.response?.status === 429) {
         const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
         console.log(`⏳ Rate limited. Retrying in ${Math.round(waitTime)}ms`);
-
         if (attempt < maxRetries - 1) {
           await new Promise((resolve) => setTimeout(resolve, waitTime));
           continue;
         }
       }
-
-      throw error;
+      
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
     }
   }
-
   throw new Error("Max retries exceeded");
 }
 
-// ============ RESPONSE PARSING ============
 function parseAIResponse(response: any): any {
-  let content = response.choices[0].message.content;
-  content = content.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "");
-
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
+  try {
+    console.log("Raw AI response:", JSON.stringify(response, null, 2));
+    
+    let content = response.choices[0].message.content;
+    console.log("Content before cleaning:", content);
+    
+    content = content.trim().replace(/```json\n?/g, "").replace(/```\n?/g, "");
+    console.log("Content after cleaning:", content);
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      console.log("Successfully parsed JSON:", parsed);
+      return parsed;
+    }
+    
+    console.error("No valid JSON found in response");
+    throw new Error("No valid JSON in AI response");
+  } catch (error) {
+    console.error("Error parsing AI response:", error);
+    throw error;
   }
-
-  throw new Error("No valid JSON in AI response");
 }
 
-// ============ FALLBACK RESPONSE ============
 function getFallbackResponse(message: Message, cleanContent: string): EmailResponse {
   const { subject, from } = message;
   const priority = determinePriority(subject, cleanContent, from);
   const action = extractAction(cleanContent);
-  const dueDate = validateDueDate(subject, cleanContent, from, null);
-
+  const { date: dueDate, time: dueTime } = validateDueDate(subject, cleanContent, from, null);
+  
   return {
     subject,
     summary: cleanContent.substring(0, 200) + (cleanContent.length > 200 ? "..." : ""),
     priority,
     action,
     dueDate,
+    dueTime,
   };
 }
 
@@ -354,7 +424,6 @@ function determinePriority(
   from: string
 ): "high" | "medium" | "low" {
   const text = (subject + " " + content + " " + from).toLowerCase();
-
   const lowPatterns = [
     /\b(otp|verification code|tpin|2fa)\b/i,
     /no-?reply@/i,
@@ -362,15 +431,13 @@ function determinePriority(
     /transaction (statement|receipt)/i,
   ];
   if (lowPatterns.some(p => p.test(text))) return "low";
-
+  
   const highPatterns = [
     /\b(urgent|asap|critical)\b/i,
     /\bdeadline (today|tomorrow)\b/i,
     /\bfinal (notice|warning)\b/i,
   ];
-  if (highPatterns.some(p => p.test(text)) && !text.includes("no-reply")) {
-    return "high";
-  }
-
+  if (highPatterns.some(p => p.test(text)) && !text.includes("no-reply")) return "high";
+  
   return "medium";
 }

@@ -8,6 +8,7 @@ interface Email {
   action: string;
   dueDate: Date | null;
   createdAt: Date;
+  receivedAt: Date;
 }
 
 interface EmailListProps {
@@ -101,7 +102,7 @@ export function TaskList({
             <div className="flex items-center gap-3">
               {task.dueDate && (
                 <span className="flex items-center gap-1">
-                  {formatDate(task.dueDate)}
+                  {formatDate(task.dueDate) } 
                 </span>
               )}
               {task.action && (
@@ -111,7 +112,7 @@ export function TaskList({
               )}
             </div>
             <time>
-              {new Date(task.createdAt).toLocaleDateString("en-US", {
+              {new Date(task.receivedAt).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               })}

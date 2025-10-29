@@ -23,6 +23,8 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ stats, emails }: StatsGridProps) {
+  console.log("StatsGrid stats:", stats);
+  console.log("StatsGrid emails:", emails.filter((t) => t.dueDate));
   const upcomingDeadlines = emails.filter((t) => t.dueDate).length;
 
   return (

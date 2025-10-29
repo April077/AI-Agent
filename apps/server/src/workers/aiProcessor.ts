@@ -36,7 +36,7 @@ async function startProcessor() {
       for (const email of unprocessedEmails) {
         try {
           const result = await queue.add(() => summarizeEmail(email));
-
+          console.log(`  📝 Ai result at ai Processor: }`, result);
           const refreshToken = email.user.accounts[0]?.refresh_token;
 
           // Only attempt calendar creation if it's actually a meeting
@@ -46,7 +46,7 @@ async function startProcessor() {
                 `⚠️ AI Processor: No refresh token for user ${email.user.id}, skipping calendar event creation...`
               );
               // Don't return - continue processing the email
-            } else if (result.dueDate) {
+            } else if (result.dueDate && result.dueTime) {
               console.log(
                 `📅 Adding high-priority meeting to calendar: ${email.subject}`
               );
@@ -54,6 +54,7 @@ async function startProcessor() {
               await addEventToGoogleCalendar(refreshToken, {
                 summary: email.subject,
                 dueDate: result.dueDate,
+                dueTime: result.dueTime,
               });
             } else {
               console.log(
@@ -61,13 +62,11 @@ async function startProcessor() {
               );
             }
           } else {
-            console.log(
-              `⏭️ Not a meeting email: ${email.subject}`
-            );
+            console.log(`⏭️ Not a meeting email: ${email.subject}`);
           }
 
           // Always update the email record
-          await prisma.email.update({
+          const responseUpdate = await prisma.email.update({
             where: { id: email.id },
             data: {
               processed: true,
@@ -75,12 +74,13 @@ async function startProcessor() {
               priority: result.priority,
               action: result.action,
               dueDate: result.dueDate ? new Date(result.dueDate) : null,
+              dueTime: result.dueTime || null,
             },
           });
-          console.log(`  ✅ ${email.subject} → ${result.priority}`);
+          console.log(`  ✅ Processed: ${email.subject}`, responseUpdate);
         } catch (error) {
           console.error(`  ❌ Failed: ${email.subject}`, error);
-          
+
           // Mark as processed even on failure to avoid infinite retry
           try {
             await prisma.email.update({
