@@ -16,7 +16,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 h-screen bg-slate-950  shadow-sm p-4 flex flex-col">
-      <h2 className="text-xl font-semibold mb-6 text-white">AI Agent</h2>
+      <h2 className="text-xl font-semibold mb-6 text-white">Mail Buddy</h2>
       <nav className="flex flex-col  gap-2">
         {links.map(({ href, label, icon: Icon }) => (
           <Link

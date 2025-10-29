@@ -19,11 +19,7 @@ async function startProcessor() {
         include: {
           user: {
             include: {
-              accounts: {
-                where: {
-                  provider: "google",
-                },
-              },
+              accounts: true,
             },
           },
         },
@@ -41,22 +37,36 @@ async function startProcessor() {
         try {
           const result = await queue.add(() => summarizeEmail(email));
 
-          const refreshToken = email.user.accounts[0].refresh_token;
+          const refreshToken = email.user.accounts[0]?.refresh_token;
 
-          if (!refreshToken) {
+          // Only attempt calendar creation if it's actually a meeting
+          if (isMeetingEmail(email.subject, email.snippet)) {
+            if (!refreshToken) {
+              console.log(
+                `⚠️ AI Processor: No refresh token for user ${email.user.id}, skipping calendar event creation...`
+              );
+              // Don't return - continue processing the email
+            } else if (result.dueDate) {
+              console.log(
+                `📅 Adding high-priority meeting to calendar: ${email.subject}`
+              );
+
+              await addEventToGoogleCalendar(refreshToken, {
+                summary: email.subject,
+                dueDate: result.dueDate,
+              });
+            } else {
+              console.log(
+                `⏭️ Meeting email but not high-priority or no date: ${email.subject}`
+              );
+            }
+          } else {
             console.log(
-              ` AI Processor: No refresh token for user ${email.user.id}, skipping calendar event creation...`
+              `⏭️ Not a meeting email: ${email.subject}`
             );
-            return;
           }
 
-          if (isMeetingEmail(email.subject, email.snippet) && result.dueDate) {
-            await addEventToGoogleCalendar(refreshToken, {
-              summary: email.subject,
-              dueDate: result.dueDate,
-            });
-          }
-
+          // Always update the email record
           await prisma.email.update({
             where: { id: email.id },
             data: {
@@ -70,10 +80,21 @@ async function startProcessor() {
           console.log(`  ✅ ${email.subject} → ${result.priority}`);
         } catch (error) {
           console.error(`  ❌ Failed: ${email.subject}`, error);
+          
+          // Mark as processed even on failure to avoid infinite retry
+          try {
+            await prisma.email.update({
+              where: { id: email.id },
+              data: { processed: true },
+            });
+          } catch (updateError) {
+            console.error(`  ❌ Failed to mark as processed: ${email.id}`);
+          }
         }
       }
     } catch (error) {
       console.error("AI Processor: Error fetching unprocessed emails:", error);
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait before retry
       continue;
     }
   }

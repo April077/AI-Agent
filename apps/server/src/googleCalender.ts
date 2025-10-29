@@ -37,7 +37,7 @@ export async function addEventToGoogleCalendar(
   const res = await calendar.events.insert({
     calendarId: "primary",
     requestBody: event,
-    conferenceDataVersion: 1, // Needed for Meet link
+    conferenceDataVersion: 1,
   });
 
   return res.data.htmlLink;
@@ -55,5 +55,5 @@ export function isMeetingEmail(subject: string, body: string): boolean {
     "zoom",
     "google meet",
   ];
-  return keywords.some((k) => text.includes(k));
+  return keywords.some((k) => new RegExp(`\\b${k}\\b`, "i").test(text));
 }

@@ -7,8 +7,8 @@ function log(message: string, ...args: any[]) {
   console.log(`[${timestamp}] ${message}`, ...args);
 }
 
-// ✅ Runs every 10 seconds
-cron.schedule("*/10 * * * * *", async () => {
+// ✅ Runs every 10 min
+cron.schedule("*/1 * * * *", async () => {
   log("🔄 Email Fetcher: Starting cron cycle...");
 
   try {
