@@ -1,6 +1,7 @@
 import { prisma } from "@repo/db";
 import { google } from "googleapis";
 import cron from "node-cron";
+import { emailQueue } from "../queue/emailQueue";
 
 function log(message: string, ...args: any[]) {
   const timestamp = new Date().toISOString();
@@ -92,7 +93,8 @@ async function fetchAndStoreEmails(userId: string, refreshToken: string) {
       });
 
       const headers = full.data.payload?.headers || [];
-      const subject = headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
+      const subject =
+        headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
       const from = headers.find((h) => h.name === "From")?.value || "(Unknown)";
       const body = getEmailBody(full.data.payload);
       const receivedAt = new Date(parseInt(full.data.internalDate || "0"));
@@ -113,6 +115,8 @@ async function fetchAndStoreEmails(userId: string, refreshToken: string) {
           dueDate: null,
         },
       });
+
+      emailQueue.add("summarize", { emailId: msg.id });
 
       stored++;
       log(`✅ Stored: "${subject}"`);
