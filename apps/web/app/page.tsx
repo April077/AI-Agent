@@ -1,10 +1,15 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../lib/auth";
 import SignInButton from "../components/SignInButton";
+import { redirect } from "next/navigation";
 
 export default async function LandingPage() {
   const session = await getServerSession(authOptions);
   console.log("Session on landing page:", session);
+
+  if (session) {
+    redirect("/dashboard");
+  }
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
@@ -20,17 +25,9 @@ export default async function LandingPage() {
             your apps — all in one intelligent assistant.
           </p>
 
-          {/* ✅ Show Sign Out if logged in, else Sign In */}
-          {session ? (
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-lg">Signed in as {session.user?.email}</p>
-              <SignInButton signedIn={true} />
-            </div>
-          ) : (
-            <div className="flex justify-center w-full">
-              <SignInButton signedIn={false} />
-            </div>
-          )}
+          <div className="flex justify-center w-full">
+            <SignInButton signedIn={false} />
+          </div>
         </div>
 
         {/* Decorative floating shapes */}
@@ -72,7 +69,8 @@ export default async function LandingPage() {
             Ready to boost your productivity with AI?
           </h2>
           <p className="text-lg text-white mb-8">
-            Sign in with Google and let your intelligent assistant handle the rest.
+            Sign in with Google and let your intelligent assistant handle the
+            rest.
           </p>
           <SignInButton signedIn={false} />
         </section>

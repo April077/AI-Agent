@@ -28,7 +28,7 @@ app.get("/emails/:userId", async (req, res) => {
   try {
     const emails = await prisma.email.findMany({
       where: { userId: userId, processed: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { receivedAt: "desc" },
       take: 50,
     });
 

@@ -3,9 +3,9 @@ interface Email {
   userId: string;
   emailId: string;
   subject: string;
-  summary: string;
-  priority: string;
-  action: string;
+  summary: string | null;
+  priority: string | null;
+  action: string | null;
   dueDate: Date | null;
   createdAt: Date;
   receivedAt: Date;
@@ -76,19 +76,21 @@ export function TaskList({
       {displayTasks.map((task) => (
         <div
           key={task.id}
-          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+          className="border border-gray-200  rounded-xl p-4 hover:shadow-md transition-shadow bg-white"
         >
           {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">
-              {task.subject}
-            </h4>
-            <span
-              className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}
-            >
-              {task.priority}
-            </span>
-          </div>
+          {task.priority && (
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h4 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">
+                {task.subject}
+              </h4>
+              <span
+                className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}
+              >
+                {task.priority}
+              </span>
+            </div>
+          )}
 
           {/* Summary */}
           {task.summary && (
@@ -102,7 +104,7 @@ export function TaskList({
             <div className="flex items-center gap-3">
               {task.dueDate && (
                 <span className="flex items-center gap-1">
-                  {formatDate(task.dueDate) } 
+                  {formatDate(task.dueDate)}
                 </span>
               )}
               {task.action && (
