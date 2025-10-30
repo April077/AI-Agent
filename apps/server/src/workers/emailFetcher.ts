@@ -7,8 +7,7 @@ function log(message: string, ...args: any[]) {
   console.log(`[${timestamp}] ${message}`, ...args);
 }
 
-// ✅ Runs every 10 min
-cron.schedule("*/10 * * * * *", async () => {
+cron.schedule("*/30 * * * * *", async () => {
   log("🔄 Email Fetcher: Starting cron cycle...");
 
   try {
@@ -50,58 +49,62 @@ async function fetchAndStoreEmails(userId: string, refreshToken: string) {
 
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
+  // Get most recent email timestamp
   const lastEmail = await prisma.email.findFirst({
     where: { userId },
     orderBy: { receivedAt: "desc" },
   });
 
-  const after =
-    lastEmail?.receivedAt || new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
-  const afterTimeStamp = Math.floor(after.getTime() / 1000) + 1;
+  // Query from 1 second after last email, or last 24 hours if none
+  const afterTimestamp = lastEmail
+    ? Math.floor(lastEmail.receivedAt.getTime() / 1000) + 1
+    : Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
 
-  log(
-    `📅 Fetching messages after ${after.toISOString()} (timestamp: ${afterTimeStamp})`
-  );
+  log(`📅 Querying Gmail for emails after timestamp: ${afterTimestamp}`);
 
   const response = await gmail.users.messages.list({
     userId: "me",
-    q: `after:${afterTimeStamp}`,
+    q: `after:${afterTimestamp}`,
     maxResults: 50,
   });
 
-  const newMails = response.data.messages || [];
-  log(`📧 Found ${newMails.length} new messages for user ${userId}.`);
+  const messages = response.data.messages || [];
+  log(`📧 Found ${messages.length} messages`);
 
-  if (newMails.length === 0) return;
+  if (messages.length === 0) return;
 
-  let storedCount = 0;
+  let stored = 0;
 
-  for (const mail of newMails) {
+  for (const msg of messages) {
     try {
-      const fullMsg = await gmail.users.messages.get({
+      // Check if already exists
+      const exists = await prisma.email.findUnique({
+        where: { emailId: msg.id! },
+      });
+
+      if (exists) continue;
+
+      // Get full message
+      const full = await gmail.users.messages.get({
         userId: "me",
-        id: mail.id!,
+        id: msg.id!,
         format: "full",
       });
 
-      const headers = fullMsg.data.payload?.headers || [];
-      const subject =
-        headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
-      const from =
-        headers.find((h) => h.name === "From")?.value || "(Unknown Sender)";
-      const body = getEmailBody(fullMsg.data.payload);
-      const snippet = fullMsg.data.snippet || "";
-      const receivedAt = new Date(parseInt(fullMsg.data.internalDate || "0"));
+      const headers = full.data.payload?.headers || [];
+      const subject = headers.find((h) => h.name === "Subject")?.value || "(No Subject)";
+      const from = headers.find((h) => h.name === "From")?.value || "(Unknown)";
+      const body = getEmailBody(full.data.payload);
+      const receivedAt = new Date(parseInt(full.data.internalDate || "0"));
 
-      await prisma.email.upsert({
-        where: { emailId: mail.id! },
-        update: {},
-        create: {
+      // Store email
+      await prisma.email.create({
+        data: {
           userId,
-          emailId: mail.id!,
+          emailId: msg.id!,
           subject,
           from,
-          snippet: body || snippet,
+          snippet: body || full.data.snippet || "",
           receivedAt,
           processed: false,
           summary: null,
@@ -111,51 +114,52 @@ async function fetchAndStoreEmails(userId: string, refreshToken: string) {
         },
       });
 
-      storedCount++;
-      log(`✅ Stored email: ${subject} from ${from}`);
+      stored++;
+      log(`✅ Stored: "${subject}"`);
     } catch (err) {
-      log(`⚠️ Error storing email ${mail.id}:`, err);
+      log(`⚠️ Error with email ${msg.id}:`, err);
     }
   }
 
-  log(
-    `📦 Total stored: ${storedCount}/${newMails.length} new emails for user ${userId}`
-  );
+  log(`📦 Stored ${stored} new emails`);
 }
 
 function getEmailBody(payload: any): string {
   let body = "";
 
-  function decodeBase64(data: string): string {
+  function decode(data: string): string {
     try {
       return Buffer.from(data, "base64").toString("utf-8");
-    } catch (e) {
+    } catch {
       return "";
     }
   }
 
   if (payload.body?.data) {
-    body = decodeBase64(payload.body.data);
+    body = decode(payload.body.data);
   } else if (payload.parts) {
+    // Try text/plain first
     for (const part of payload.parts) {
       if (part.mimeType === "text/plain" && part.body?.data) {
-        body = decodeBase64(part.body.data);
+        body = decode(part.body.data);
         break;
       }
       if (part.parts) {
         for (const subPart of part.parts) {
           if (subPart.mimeType === "text/plain" && subPart.body?.data) {
-            body = decodeBase64(subPart.body.data);
+            body = decode(subPart.body.data);
             break;
           }
         }
       }
+      if (body) break;
     }
 
+    // Fallback to HTML
     if (!body) {
       for (const part of payload.parts) {
         if (part.mimeType === "text/html" && part.body?.data) {
-          body = decodeBase64(part.body.data)
+          body = decode(part.body.data)
             .replace(/<[^>]*>/g, " ")
             .replace(/\s+/g, " ")
             .trim();
