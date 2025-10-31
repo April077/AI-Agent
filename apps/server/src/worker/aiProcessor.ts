@@ -10,15 +10,18 @@ import { connection } from "../queue/connection";
 export const emailWorker = new Worker(
   "email-processing",
   async (job: Job) => {
+    console.log("entered email worker", job.data);
     const emailId = job.data.emailId;
     const email = await prisma.email.findUnique({
-      where: { id: emailId },
+      where: { emailId : emailId },
       include: {
         user: {
           include: { accounts: true },
         },
       },
     });
+
+    console.log("Processing email :", email);
 
     if (!email) {
       return;
