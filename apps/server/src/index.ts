@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { prisma } from "@repo/db";
-import { connection } from "./queue/connection";
+import { connection } from "./queue/connection.js";
 
 dotenv.config();
 
@@ -47,7 +47,10 @@ app.get("/emails/:userId", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+const PORT = Number(process.env.PORT) || 4000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
 
 await connection.ping(); // should return "PONG"

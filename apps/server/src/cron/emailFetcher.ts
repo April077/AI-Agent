@@ -1,7 +1,7 @@
 import { prisma } from "@repo/db";
 import { google } from "googleapis";
 import cron from "node-cron";
-import { emailQueue } from "../queue/emailQueue";
+import { emailQueue } from "../queue/emailQueue.js";
 
 function log(message: string, ...args: any[]) {
   const timestamp = new Date().toISOString();

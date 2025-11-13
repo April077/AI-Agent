@@ -2,8 +2,6 @@
   "name": "server",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/index.ts",
-  "license": "MIT",
   "scripts": {
     "dev:api": "tsx watch src/index.ts",
     "dev:cron": "tsx watch src/cron/emailFetcher.ts",

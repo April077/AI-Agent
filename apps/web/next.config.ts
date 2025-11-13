@@ -5,6 +5,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  distDir: ".next",
+  transpilePackages: ["@repo/db"],
   reactStrictMode: true,
   images: {
     remotePatterns: [

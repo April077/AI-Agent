@@ -1,11 +1,11 @@
 import { prisma } from "@repo/db";
-import { summarizeEmail } from "../lib/summarizeEmail";
+import { summarizeEmail } from "../lib/summarizeEmail.js";
 import {
   addEventToGoogleCalendar,
   isMeetingEmail,
-} from "../lib/googleCalender";
+} from "../lib/googleCalender.js";
 import { Worker, Job } from "bullmq";
-import { connection } from "../queue/connection";
+import { connection } from "../queue/connection.js";
 
 export const emailWorker = new Worker(
   "email-processing",

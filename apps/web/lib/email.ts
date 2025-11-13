@@ -30,7 +30,7 @@ export async function fetchEmails(userId: string): Promise<EmailResponse> {
   console.log("[fetchEmails] Called with userId:", userId);
 
   try {
-    const response = await fetch(`http://localhost:4000/emails/${userId}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/emails/${userId}`, {
       cache: "no-store",
     });
 
