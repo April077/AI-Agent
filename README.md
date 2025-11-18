@@ -161,19 +161,7 @@ yarn seed       # (Optional) Seed with sample data
 **Priority Filtering**
 - Filter emails by priority level
 - Smart categorization based on content and sender
-
-### API Endpoints
-
-```
-POST   /auth/google           # Initiate Gmail OAuth
-GET    /auth/google/callback  # OAuth callback
-GET    /api/emails            # List emails with summaries
-GET    /api/emails/:id        # Get single email details
-GET    /api/tasks             # List extracted tasks
-GET    /api/meetings          # List extracted meetings
-PATCH  /api/tasks/:id         # Update task status
-```
-
+- 
 ## Docker Images
 
 Pre-built images available on Docker Hub:
