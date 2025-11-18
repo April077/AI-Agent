@@ -1,4 +1,20 @@
-import { Email } from "@/packages/db/src";
+
+interface Email {
+  id: string;
+  userId: string;
+  emailId: string;
+  from: string;
+  snippet: string;
+  receivedAt: Date;
+  processed: boolean;
+  subject: string;
+  summary: string | null;
+  priority: string | null;
+  action: string | null;
+  dueDate: Date | null;
+  dueTime: string | null;
+  createdAt: Date;
+}
 
 export interface EmailStats {
   total: number;
@@ -14,25 +30,16 @@ interface EmailResponse {
   stats: EmailStats;
 }
 
-interface SyncResponse {
-  success: boolean;
-  totalFetched: number;
-  processed: number;
-  skipped: number;
-  processedEmails: Array<{
-    id: string;
-    subject: string;
-    priority: string;
-  }>;
-}
-
 export async function fetchEmails(userId: string): Promise<EmailResponse> {
   console.log("[fetchEmails] Called with userId:", userId);
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/emails/${userId}`, {
-      cache: "no-store",
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/emails/${userId}`,
+      {
+        cache: "no-store",
+      }
+    );
 
     console.log("[fetchEmails] Response status:", response.status);
 
